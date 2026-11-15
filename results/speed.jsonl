@@ -1,0 +1,20 @@
+{"name": "N3D", "profile": "1.04", "batch": 1, "rtfx": 88.6, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "SAM-full", "profile": "1.04", "batch": 1, "rtfx": 83.6, "params_M": 100.07, "new_params_M": 0.841}
+{"name": "N3D", "profile": "1.04", "batch": 16, "rtfx": 304.5, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "SAM-full", "profile": "1.04", "batch": 16, "rtfx": 296.5, "params_M": 100.07, "new_params_M": 0.841}
+{"name": "N3D", "profile": "0.32", "batch": 1, "rtfx": 28.7, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "SAM-full", "profile": "0.32", "batch": 1, "rtfx": 27.5, "params_M": 100.07, "new_params_M": 0.841}
+{"name": "N3D", "profile": "0.32", "batch": 16, "rtfx": 104.0, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "SAM-full", "profile": "0.32", "batch": 16, "rtfx": 101.0, "params_M": 100.07, "new_params_M": 0.841}
+{"name": "N3D", "profile": "1.04", "spkcache": 132, "batch": 16, "rtfx": 895.1, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D", "profile": "1.04", "spkcache": 264, "batch": 16, "rtfx": 653.5, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D", "profile": "1.04", "spkcache": 330, "batch": 16, "rtfx": 578.0, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D", "profile": "1.04", "spkcache": 396, "batch": 16, "rtfx": 518.6, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D", "profile": "1.04", "spkcache": 462, "batch": 16, "rtfx": 453.7, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D", "profile": "1.04", "spkcache": 528, "batch": 16, "rtfx": 403.5, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D_clean", "profile": "1.04", "spkcache": 264, "batch": 1, "rtfx": 91.7, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D_clean", "profile": "1.04", "spkcache": 264, "batch": 16, "rtfx": 653.3, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D_clean", "profile": "0.32", "spkcache": 264, "batch": 1, "rtfx": 30.9, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D_clean", "profile": "0.32", "spkcache": 264, "batch": 16, "rtfx": 223.3, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D_clean", "profile": "1.04", "spkcache": 396, "batch": 16, "rtfx": 518.2, "params_M": 99.23, "new_params_M": 0.0}
+{"name": "N3D_clean", "profile": "1.04", "spkcache": 396, "batch": 1, "rtfx": 91.1, "params_M": 99.23, "new_params_M": 0.0}

@@ -1,0 +1,11 @@
+# Python 3.11. Install torch for your CUDA version first, e.g.
+#   pip install torch==2.8.0 --index-url https://download.pytorch.org/whl/cu128
+# NeMo Speech at the commit used in the paper:
+#   git clone https://github.com/NVIDIA-NeMo/Speech && git -C Speech checkout a039a6cfce00aa57a6a8cd8e96166c1379f903e8 && pip install -e "Speech[asr]"
+lhotse==2.0.0a6
+pyannote.metrics==3.2.1
+pyannote.core
+numpy==1.26.4
+soundfile
+huggingface_hub
+matplotlib
