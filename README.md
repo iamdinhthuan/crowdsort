@@ -12,7 +12,7 @@ lets new speakers enter when the speaker cache already holds earlier speakers, a
 `code/make_interleave.py`) lets speakers leave and return. CrowdSort-P adds a boundary perturbation
 (`--perturb`, `code/perturb.py`). The architecture is unchanged, so inference cost equals that of the released model.
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24310304.svg)](https://doi.org/10.5281/zenodo.24310304)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24318007.svg)](https://doi.org/10.5281/zenodo.24318007)
 
 Main results (DER %, 1.04 s latency, collar 0, overlap scored; three seeds per fine-tuned system, averaged per recording):
 
@@ -64,5 +64,5 @@ original sources.
 If you use this code or these results, please cite the archived release:
 
 > D. T. Nguyen, L. P. Nguyen, V. H. Nguyen, M. R. Elara and A. V. Le. *CrowdSort: code and results for many-speaker
-> conversation synthesis for streaming Sortformer diarization* (v1.0.0). Zenodo, 2026.
-> https://doi.org/10.5281/zenodo.24310304
+> conversation synthesis for streaming Sortformer diarization* (v1.0.1). Zenodo, 2026.
+> https://doi.org/10.5281/zenodo.24318007
