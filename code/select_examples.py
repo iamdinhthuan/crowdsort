@@ -5,14 +5,12 @@ Rule: among MSDWild-many recordings with >= 7 reference speakers, take (a) the o
 For AISHELL-4 test, take the session with the median late-session change and show minutes 30-32.
 python select_examples.py --base ft3_s1 --prop sam3_s1
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 
 import numpy as np
 
-ROOT = CROWDSORT_ROOT
+ROOT = "/mnt/ssd2/paper/paper_1"
 
 
 def der(r):

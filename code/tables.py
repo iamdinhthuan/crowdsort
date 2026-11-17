@@ -2,8 +2,6 @@
 
 python tables.py [--models a,b] [--decode thr] [--profile 1.04] [--metric DER]
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 
@@ -17,7 +15,7 @@ SHORT = {"ami_test_mhm": "AMI-MHM", "ami_test_sdm": "AMI-SDM", "ali_test_near": 
 
 def load():
     best = {}
-    for l in open(CROWDSORT_ROOT + "/results/results.jsonl"):
+    for l in open("/mnt/ssd2/paper/paper_1/results/results.jsonl"):
         r = json.loads(l)
         best[(r["model"], r["set"], r["profile"], r["decode"])] = r
     return best

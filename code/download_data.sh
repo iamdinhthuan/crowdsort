@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-CROWDSORT_ROOT=${CROWDSORT_ROOT:-$(cd "$(dirname "$0")/.." && pwd)}
 # Download public diarization corpora used in the paper. Resumable (curl -C -).
 set -u
-ROOT=${CROWDSORT_ROOT}/data/raw
+ROOT=/mnt/ssd2/paper/paper_1/data/raw
 dl() { # url out
   mkdir -p "$(dirname "$2")"
   for i in 1 2 3 4 5; do
@@ -13,7 +12,7 @@ dl() { # url out
 }
 case "$1" in
 ami)
-  L=${CROWDSORT_ROOT}/data/refs/AMI-diarization-setup/lists
+  L=/mnt/ssd2/paper/paper_1/data/refs/AMI-diarization-setup/lists
   for m in $(cat $L/test.meetings.txt $L/dev.meetings.txt $L/train.meetings.txt); do
     for s in Mix-Headset Array1-01; do
       f=$ROOT/ami/$s/$m.$s.wav

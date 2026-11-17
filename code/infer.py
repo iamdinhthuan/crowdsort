@@ -3,8 +3,6 @@
 python infer.py --model base|<ckpt.nemo|.ckpt> --manifest data/manifests/ami_test_mhm.jsonl \
     --profile 1.04 --out exp/<name>/<set>/<profile> [--oracle-cache] [--sfx-json '{}']
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 import os
@@ -17,7 +15,7 @@ import torch
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-BASE_NEMO = CROWDSORT_ROOT + "/models/base/Nemotron-3-Diarization.nemo"
+BASE_NEMO = "/mnt/ssd2/paper/paper_1/models/base/Nemotron-3-Diarization.nemo"
 PROFILES = {  # spkcache, fifo, chunk, right_ctx, update_period (80 ms frames)
     "30.4": (264, 40, 340, 40, 300),
     "1.04": (264, 264, 9, 4, 222),

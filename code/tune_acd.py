@@ -3,8 +3,6 @@
 python tune_acd.py --model base --profile 1.04
 Prints the mean dev DER for every setting, best last; writes results/acd_<model>.json.
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import itertools
 import json
@@ -15,7 +13,7 @@ from concurrent.futures import ProcessPoolExecutor
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from score import score_file  # noqa: E402
 
-ROOT = CROWDSORT_ROOT
+ROOT = "/mnt/ssd2/paper/paper_1"
 DEV = ["ami_dev_mhm", "ami_dev_sdm", "ali_eval_near", "ali_eval_far", "aishell4_dev"]
 
 

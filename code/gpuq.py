@@ -1,13 +1,11 @@
 """Tiny sequential GPU job queue. Jobs are shell files in queue/pending/*.sh, run in name order.
 A finished job moves to queue/done/ (exit 0) or queue/failed/, with its log in queue/logs/<name>.log.
 Run: nohup python gpuq.py &   (stops when queue/STOP exists)"""
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import os
 import subprocess
 import time
 
-Q = CROWDSORT_ROOT + "/queue"
+Q = "/mnt/ssd2/paper/paper_1/queue"
 for d in ("pending", "done", "failed", "logs", "running"):
     os.makedirs(os.path.join(Q, d), exist_ok=True)
 
@@ -22,7 +20,7 @@ while not os.path.exists(os.path.join(Q, "STOP")):
     os.rename(src, run)
     t0 = time.time()
     with open(os.path.join(Q, "logs", j[:-3] + ".log"), "w") as log:
-        rc = subprocess.call(["bash", run], stdout=log, stderr=subprocess.STDOUT, cwd=CROWDSORT_ROOT)
+        rc = subprocess.call(["bash", run], stdout=log, stderr=subprocess.STDOUT, cwd="/mnt/ssd2/paper/paper_1")
     dst = os.path.join(Q, "done" if rc == 0 else "failed", j)
     os.rename(run, dst)
     with open(os.path.join(Q, "history.txt"), "a") as h:

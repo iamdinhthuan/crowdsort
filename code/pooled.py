@@ -2,14 +2,12 @@
 
 python pooled.py --ref base --models base_sc396,base_ad66_528 --group dev|test [--profile 1.04]
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 import os
 import subprocess
 
-ROOT = CROWDSORT_ROOT
+ROOT = "/mnt/ssd2/paper/paper_1"
 GROUPS = {
     "dev": ["ami_dev_mhm", "ami_dev_sdm", "ali_eval_near", "ali_eval_far", "aishell4_dev", "msdwild_fewdev",
             "msdwild_concatdev"],

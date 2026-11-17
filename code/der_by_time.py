@@ -2,8 +2,6 @@
 
 python der_by_time.py --model ft_base_s1 --sets aishell4_test,ami_test_sdm --profile 1.04 --edges 0,300,900,1800,99999
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 import os
@@ -13,7 +11,7 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 
 warnings.filterwarnings("ignore")
-ROOT = CROWDSORT_ROOT
+ROOT = "/mnt/ssd2/paper/paper_1"
 
 
 def one(job):

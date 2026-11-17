@@ -3,8 +3,6 @@
 Each session joins clips (with 0.3-1.0 s silence gaps) until it holds 5-8 distinct speakers and lasts at
 most 200 s. Speaker labels are prefixed with the clip id, so speakers from different clips are distinct.
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import json
 import os
 import random
@@ -15,10 +13,17 @@ import soundfile as sf
 
 import sys
 
-ROOT = CROWDSORT_ROOT + "/data"
+ROOT = "/mnt/ssd2/paper/paper_1/data"
 SRC, NAME, N, SEED = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+PERTURB = "--perturb" in sys.argv  # acoustic perturbation (perturb.py); selection and timing stay identical
+# --kmin K: draw the target number of speakers from K..8 instead of 5..8 (at least two clips per session)
+KMIN = int(sys.argv[sys.argv.index("--kmin") + 1]) if "--kmin" in sys.argv else 5
 random.seed(SEED)
 np.random.seed(SEED)
+if PERTURB:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from perturb import band, jitter, noise_floor
+    prng = np.random.default_rng(SEED + 1000)
 
 clips = [json.loads(l) for l in open(f"{ROOT}/manifests/{SRC}.jsonl")]
 clips = [c for c in clips if 10 <= c["duration"] <= 120]
@@ -37,10 +42,10 @@ os.makedirs(out_wav, exist_ok=True)
 os.makedirs(out_rttm, exist_ok=True)
 lines = []
 for i in range(N):
-    target = random.randint(5, 8)
+    target = random.randint(KMIN, 8)
     pieces, spk, dur = [], set(), 0.0
     tries = 0
-    while len(spk) < target and tries < 50:
+    while (len(spk) < target or len(pieces) < 2) and tries < 50:
         tries += 1
         c = random.choice(clips)
         uid = os.path.basename(c["audio_filepath"])[:-4]
@@ -50,13 +55,17 @@ for i in range(N):
         pieces.append((c, uid))
         spk |= new
         dur += c["duration"] + 0.65
-    if len(spk) < 5:
+    if len(spk) < KMIN or len(pieces) < 2:
         continue
     sid = f"{NAME}_{i:04d}"
     audio, rttm, t = [], [], 0.0
     for c, uid in pieces:
         x, sr = sf.read(c["audio_filepath"], dtype="float32")
+        if PERTURB:
+            x = band(x, prng)
         x = x / (np.abs(x).max() + 1e-6) * random.uniform(0.3, 0.9)
+        if PERTURB:
+            x = x * jitter(prng)
         audio.append(x)
         for s, d, k in segs[uid]:
             rttm.append((t + s, d, k))
@@ -65,7 +74,10 @@ for i in range(N):
         audio.append(gap)
         t += len(gap) / 16000
     wav = f"{out_wav}/{sid}.wav"
-    sf.write(wav, np.concatenate(audio), 16000, subtype="PCM_16")
+    y = np.concatenate(audio)
+    if PERTURB:
+        y = np.clip(noise_floor(y, prng), -1, 1)
+    sf.write(wav, y, 16000, subtype="PCM_16")
     rp = f"{out_rttm}/{sid}.rttm"
     with open(rp, "w") as f:
         for s, d, k in sorted(rttm):

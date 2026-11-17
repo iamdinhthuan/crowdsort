@@ -7,8 +7,6 @@ concatenation, a speaker of one clip reappears after speakers of other clips hav
 
 python make_interleave.py SRC_MANIFEST NAME N SEED
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import json
 import os
 import random
@@ -18,10 +16,17 @@ from collections import Counter
 import numpy as np
 import soundfile as sf
 
-ROOT = CROWDSORT_ROOT + "/data"
+ROOT = "/mnt/ssd2/paper/paper_1/data"
 SRC, NAME, N, SEED = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+PERTURB = "--perturb" in sys.argv  # acoustic perturbation (perturb.py); selection and timing stay identical
+# --kmin K: draw the target number of speakers from K..8 instead of 5..8 (at least two clips per session)
+KMIN = int(sys.argv[sys.argv.index("--kmin") + 1]) if "--kmin" in sys.argv else 5
 random.seed(SEED)
 np.random.seed(SEED)
+if PERTURB:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    from perturb import band, jitter, noise_floor
+    prng = np.random.default_rng(SEED + 1000)
 MIN_GAP = 0.3
 
 clips = [json.loads(l) for l in open(f"{ROOT}/manifests/{SRC}.jsonl")]
@@ -62,28 +67,30 @@ os.makedirs(out_wav, exist_ok=True)
 os.makedirs(out_rttm, exist_ok=True)
 lines = []
 for i in range(N):
-    target = random.randint(5, 8)
+    target = random.randint(KMIN, 8)
     chosen, spk, tries = [], set(), 0
-    while len(spk) < target and tries < 60 and len(chosen) < 4:
+    while (len(spk) < target or len(chosen) < 2) and tries < 60 and len(chosen) < 4:
         tries += 1
         u = random.choice(uids)
         if u in chosen or len(spk | info[u][2]) > 8:
             continue
         chosen.append(u)
         spk |= info[u][2]
-    if len(spk) < 5 or len(chosen) < 2:
+    if len(spk) < KMIN or len(chosen) < 2:
         continue
     queues = {u: list(info[u][1]) for u in chosen}
     gains = {u: random.uniform(0.3, 0.9) for u in chosen}
     audio = {u: sf.read(info[u][0]["audio_filepath"], dtype="float32")[0] for u in chosen}
     for u in chosen:
-        x = audio[u]
+        x = band(audio[u], prng) if PERTURB else audio[u]
         audio[u] = x / (np.abs(x).max() + 1e-6) * gains[u]
     parts, rttm, t = [], [], 0.0
     while any(queues.values()):
         u = random.choice([v for v in chosen if queues[v]])
         a, b, segs = queues[u].pop(0)
         x = audio[u][int(a * 16000): int(b * 16000)]
+        if PERTURB:
+            x = x * jitter(prng)
         parts.append(x)
         for s, e, k in segs:
             rttm.append((t + s, e - s, k))
@@ -93,7 +100,10 @@ for i in range(N):
         t += len(gap) / 16000
     sid = f"{NAME}_{i:04d}"
     wav = f"{out_wav}/{sid}.wav"
-    sf.write(wav, np.concatenate(parts), 16000, subtype="PCM_16")
+    y = np.concatenate(parts)
+    if PERTURB:
+        y = np.clip(noise_floor(y, prng), -1, 1)
+    sf.write(wav, y, 16000, subtype="PCM_16")
     rp = f"{out_rttm}/{sid}.rttm"
     with open(rp, "w") as f:
         for s, d, k in sorted(rttm):

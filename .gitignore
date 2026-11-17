@@ -1,11 +1,2 @@
-data/wav/
-data/raw/
-data/manifests/
-models/
-exp/*/*/*/*.npz
-exp/*/*.nemo
-exp/*/checkpoints/
 __pycache__/
 *.pyc
-queue/
-logs/

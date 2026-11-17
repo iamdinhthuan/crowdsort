@@ -1,11 +1,10 @@
+import os
 """DER versus speaker-cache size at inference, with throughput, for one or more models.
 
 python fig_capacity.py --series base:N3D:132,264,330,396,462,528 --out paper/tex/fig_capacity.pdf
 Model names per size: <model> for 264 and <model>_sc<size> otherwise (base_sc396 ...), or <model>_c<size>
 when --suffix _c is given.
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 
@@ -15,8 +14,8 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-ROOT = CROWDSORT_ROOT
-STYLE = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "figure.mplstyle")
+ROOT = "/mnt/ssd2/paper/paper_1"
+STYLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "csl-figure.mplstyle")
 SETS = {"ami_test_sdm": "AMI SDM", "aishell4_test": "AISHELL-4", "msdwild_many": "MSDWild many",
         "pooled": "Pooled (7 sets)"}
 ALL = ["ami_test_mhm", "ami_test_sdm", "ali_test_near", "ali_test_far", "aishell4_test", "msdwild_few", "msdwild_many"]

@@ -2,15 +2,14 @@
 
 python make_tables.py   (writes paper/tex/tables/*.tex and prints them)
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import json
+import re
 import os
 import subprocess
 
 import numpy as np
 
-ROOT = CROWDSORT_ROOT
+ROOT = "/mnt/ssd2/paper/paper_1"
 OUT = f"{ROOT}/paper/tex/tables"
 TEST = ["ami_test_mhm", "ami_test_sdm", "ali_test_near", "ali_test_far", "aishell4_test", "msdwild_few", "msdwild_many"]
 DEV = ["ami_dev_mhm", "ami_dev_sdm", "ali_eval_near", "ali_eval_far", "aishell4_dev", "msdwild_fewdev",
@@ -56,6 +55,21 @@ def val(model, s, p="1.04", metric="DER"):
     return None if r is None else r[metric]
 
 
+def seedavg(models, s, p="1.04"):
+    """pooled DER from per-recording errors averaged over seeds (same estimator as the bootstrap and Table 4)"""
+    sets = TEST if s == "pooled" else [s]
+    tot = err = 0.0
+    for st in sets:
+        pfs = [perfile(m, st, p) for m in models]
+        pfs = [d for d in pfs if d is not None]
+        if not pfs:
+            return None
+        for k in pfs[0]:
+            tot += np.mean([d[k]["total"] for d in pfs])
+            err += np.mean([d[k]["miss"] + d[k]["fa"] + d[k]["conf"] for d in pfs])
+    return 100 * err / tot
+
+
 def fmt(vals, bold=False, std=True):
     vals = [v for v in vals if v is not None] if isinstance(vals, list) else vals
     if vals is None or (isinstance(vals, list) and not vals):
@@ -76,7 +90,7 @@ def boot(a_models, b_models, sets, p="1.04"):
     for f in (A + "," + B).replace("+", ",").split(","):
         if not os.path.exists(f):
             return None
-    out = subprocess.run(["python3", f"{ROOT}/code/bootstrap.py", A, B, "--n", "10000"], capture_output=True,
+    out = subprocess.run(["python3", f"{ROOT}/code/bootstrap.py", A, B, "--n", "10000", "--group"], capture_output=True,
                          text=True).stdout
     return json.loads(out)
 
@@ -88,14 +102,16 @@ HEADER = ("\\begin{tabular}{l" + "c" * 8 + "}\n\\toprule\n"
 COLS = TEST + ["pooled"]
 
 
-def table_rows(rows, p="1.04"):
-    """rows: (label, [models]) ; bold = best mean per column."""
-    data = [[[val(m, c, p) for m in ms] for c in COLS] for _, ms in rows]
+def table_rows(rows, p="1.04", cols=None):
+    """rows: (label, [models]) or (label, [models], profile) ; bold = best mean per column."""
+    cols = cols or COLS
+    prof = [r[2] if len(r) > 2 else p for r in rows]
+    rows = [r[:2] for r in rows]
+    data = [[([seedavg(ms, c, q)] if len(ms) > 1 else [val(m, c, q) for m in ms]) for c in cols]
+            for (_, ms), q in zip(rows, prof)]
     lines = []
-    for j in range(len(COLS)):
-        pass
     best = []
-    for j in range(len(COLS)):
+    for j in range(len(cols)):
         ms = [np.mean([v for v in d[j] if v is not None]) for d in data if all(v is not None for v in d[j])]
         best.append(min(ms) if ms else None)
     for (lab, ms), d in zip(rows, data):
@@ -108,61 +124,95 @@ def table_rows(rows, p="1.04"):
     return lines
 
 
+WIDE = {"main", "latency", "capacity", "ablation"}  # two-column layout: these span both columns
+
+
 def write(name, text):
     os.makedirs(OUT, exist_ok=True)
-    text = text.replace("\\begin{tabular}", "\\resizebox{\\textwidth}{!}{\\begin{tabular}").replace("\\end{tabular}", "\\end{tabular}}")
+    width = "\\textwidth" if name in WIDE else "\\columnwidth"
+    if name in WIDE:
+        # span the full text width: columns spread evenly, shrink only if the content is wider
+        text = text.replace("\\begin{table}", "\\begin{table*}").replace("\\end{table}", "\\end{table*}")
+        text = re.sub(r"\\begin\{tabular\}\{([^}]*)\}", lambda m: "\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}" + m.group(1) + "}", text)
+        text = text.replace("\\end{tabular}", "\\end{tabular*}")
+        text = text.replace("\\begin{tabular*}", "\\adjustbox{max width=\\textwidth}{\\begin{tabular*}").replace("\\end{tabular*}", "\\end{tabular*}}")
+        open(f"{OUT}/{name}.tex", "w").write(text)
+        print(f"% ---- {name}\n{text}\n")
+        return
+    text = text.replace("\\begin{tabular}", "\\adjustbox{max width=" + width + "}{\\begin{tabular}").replace("\\end{tabular}", "\\end{tabular}}")
     open(f"{OUT}/{name}.tex", "w").write(text)
     print(f"% ---- {name}\n{text}\n")
 
 
 FTC = ["c3_noconcat", "c3_noconcat_s2", "c3_noconcat_s3"]
+SCM = ["c3_simconvmsd_s1", "c3_simconvmsd_s2", "c3_simconvmsd_s3"]
+FMS = ["c3_fastmss_s1", "c3_fastmss_s2", "c3_fastmss_s3"]
+FTM = ["c3_nomsd", "c3_nomsd_s2", "c3_nomsd_s3"]
+INTER = ["c3_inter", "c3_inter_s2", "c3_inter_s3"]
+CI = ["c3_ci_s1", "c3_ci_s2", "c3_ci_s3"]
+CIP = ["c3_cip_s1", "c3_cip_s2", "c3_cip_s3"]
 
 
 def have(models, sets=TEST, p="1.04"):
     return [m for m in models if all(perfile(m, s, p) is not None for s in sets)]
 
 
+def seeds(lab, ms):
+    return f"{lab} ({len(ms)} seed{'s' if len(ms) > 1 else ''})" if len(ms) > 1 else lab
+
+
 def main_table():
-    ftc = have(FTC) or ["c3_noconcat"]
-    cs = have(FT) or ["ft3_s1"]
-    rows = [("N3D (released)", ["base"]), ("FT-meet", ["c3_nomsd"]),
-            (f"FT-clips ({len(ftc)} seed{'s' if len(ftc) > 1 else ''})", ftc),
-            (f"\\sysname{{}}-C ({len(cs)} seed{'s' if len(cs) > 1 else ''})", cs),
-            ("\\sysname{}-I (1 seed)", ["c3_inter"])]
+    ftc, cs, ci, cip = have(FTC), have(FT), have(CI), have(CIP)
+    ftm, scm, fms = have(FTM), have(SCM), have(FMS)
+    rows = [("N3D (released)", ["base"]), (seeds("FT-meet", ftm), ftm), (seeds("FT-clips", ftc), ftc),
+            (seeds("SimConv-MSD", scm), scm), (seeds("FastMSS", fms), fms),
+            (seeds("\\sysname{}-C", cs), cs), (seeds("\\sysname{}", ci), ci), (seeds("\\sysname{}-P", cip), cip)]
+    rows = [r for r in rows if r[1] and have(r[1])]
+    if have(["ls_eend_dih3"], TEST, "1.0"):  # external streaming baseline, released DIHARD III checkpoint, 1.0 s latency
+        rows = [("LS-EEND$^{\\dagger}$", ["ls_eend_dih3"], "1.0")] + rows
+    cols = COLS + ["avaavd_test"]
+    body = table_rows(rows, cols=cols)
+    if rows[0][0].startswith("LS-EEND"):
+        body = [body[0].replace("\\textbf{", "{"), "\\midrule"] + body[1:]
+    head = HEADER.replace("{l" + "c" * 8 + "}", "{l" + "c" * 9 + "}").replace(" & \\\\\n\\cmidrule", " & & \\\\\n\\cmidrule").replace("Pooled\\\\", "Pooled & AVA-AVD\\\\")
     t = ["\\begin{table}[!tbph]\n\\centering",
-         "\\caption{DER (\\%) at 1.04~s latency on the seven test sets. FT-meet: fine-tuned on real meetings only; "
-         "FT-clips: real meetings and MSDWild clips without synthesis. \\sysname{}-C and \\sysname{}-I: synthesis by concatenation and by interleaving. Multi-seed rows give the mean. "
-         "Pooled: DER over all 759 test recordings. Best value per column in bold.}\\label{tab:main}",
-         "\\small\\setlength{\\tabcolsep}{4pt}", HEADER] + table_rows(rows) + ["\\bottomrule\n\\end{tabular}\n\\end{table}"]
+         "\\caption{Main results at 1.04~s latency. DER (\\%) on the seven test sets and on the unseen AVA-AVD test set. FT-meet: fine-tuned on real meetings only; "
+         "FT-clips: real meetings and MSDWild clips without synthesis; SimConv-MSD and FastMSS: FT-clips plus simulated conversations; "
+         "\\sysname{}-C: arrival operator only; \\sysname{}: arrival and return operators; \\sysname{}-P: with boundary-masking perturbation. "
+         "Multi-seed rows pool per-recording errors averaged over seeds. Pooled: DER over all 759 recordings of the seven test sets. Best value per column in bold."
+         + (" $^{\\dagger}$External streaming baseline: released DIHARD~III checkpoint of LS-EEND at 8~kHz and about 1~s latency, not fine-tuned." if rows[0][0].startswith("LS-EEND") else "")
+         + "}\\label{tab:main}",
+         "\\small\\setlength{\\tabcolsep}{4pt}", head] + body + ["\\bottomrule\n\\end{tabular}\n\\end{table}"]
     write("main", "\n".join(t))
-    # seed spread for the text
-    for lab, ms in rows:
+    for lab, ms, *_ in rows:
         if len(ms) > 1:
-            print(lab, {c: (round(float(np.mean([val(m, c) for m in ms])), 2), round(float(np.std([val(m, c) for m in ms], ddof=1)), 2)) for c in COLS})
+            print(lab, {c: (round(float(np.mean([val(m, c) for m in ms])), 2), round(float(np.std([val(m, c) for m in ms], ddof=1)), 2)) for c in cols})
 
 
 def latency_table():
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{DER (\\%) at the three latency settings (seed 1 for fine-tuned models).}\\label{tab:latency}",
+             "\\caption{Results at three latency settings. DER (\\%) at 30.4, 1.04 and 0.32~s latency; seed 1 for the fine-tuned models.}\\label{tab:latency}",
              "\\small\\setlength{\\tabcolsep}{4pt}", HEADER]
     for p in ["30.4", "1.04", "0.32"]:
         lines.append(f"\\multicolumn{{9}}{{l}}{{\\emph{{Input-buffer latency {p}~s}}}}\\\\")
-        rows = [("N3D", ["base"]), ("FT-clips", ["c3_noconcat"]), ("\\sysname{}", ["ft3_s1"])]
+        rows = [("N3D", ["base"]), ("FT-clips", ["c3_noconcat"]), ("\\sysname{}-C", ["ft3_s1"]),
+                ("\\sysname{}", ["c3_ci_s1"]), ("\\sysname{}-P", ["c3_cip_s1"])]
+        rows = [r for r in rows if have(r[1], TEST, p)]
         lines += table_rows(rows, p)
     lines.append("\\bottomrule\n\\end{tabular}\n\\end{table}")
     write("latency", "\n".join(lines))
 
 
 def ablation_table():
-    rows = [("\\sysname{} (reference)", "ft3_s1"), ("+ SAC", "c3_sac"), ("+ SAC + SPM", "c3_sacspm"), ("+ PCR", "c3_pcr"),
+    rows = [("\\sysname{}-C (reference)", "ft3_s1"), ("+ SAC", "c3_sac"), ("+ SAC + SPM", "c3_sacspm"), ("+ PCR", "c3_pcr"),
             ("+ HRS", "c3_hrs"), ("+ SAC + SPM + PCR + HRS", "sam3A_s1"), ("+ SAC + SPM-deep + PCR + HRS", "sam3B_s1"),
             ("trained with $M=396$, inference $M=396$", "c3_cap396"), ("capacity-elastic training, $M=264$", "c3_elastic_c264"),
             ("capacity-elastic training, adaptive", "c3_elastic_ad66_462"),
-            ("\\sysname{}, inference $M=396$", "ft3_s1_inf396"), ("\\sysname{}, adaptive budget", f"ft3_s1_{AD}")]
+            ("\\sysname{}-C, inference $M=396$", "ft3_s1_inf396"), ("\\sysname{}-C, adaptive budget", f"ft3_s1_{AD}")]
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Memory variants added to \\sysname{} (concatenation, seed 1), all fine-tuned with the same data, schedule and seed. "
-             "Pooled DER (\\%) on the development and test sets, DER on the two many-speaker test sets, and the paired-bootstrap "
-             "difference of the pooled test DER with respect to \\sysname{} (95\\% confidence interval).}\\label{tab:ablation}",
+             "\\caption{Memory variants. Variants added to \\sysname{}-C (arrival operator only, seed 1), all fine-tuned with the same data, schedule and seed: "
+             "pooled DER (\\%) on the development and test sets, DER on the two test sets with many speakers, and the paired bootstrap "
+             "difference of the pooled test DER with respect to \\sysname{}-C (95\\% confidence interval).}\\label{tab:ablation}",
              "\\small\\setlength{\\tabcolsep}{4pt}",
              "\\begin{tabular}{lccccc}\n\\toprule",
              "System & Dev & Test & AISHELL-4 & MSDWild many & $\\Delta$ test [95\\% CI]\\\\\n\\midrule"]
@@ -179,31 +229,52 @@ def ablation_table():
 
 
 def stats_table():
-    ftc = have(FTC) or ["c3_noconcat"]
-    cs = have(FT) or ["ft3_s1"]
-    pairs = [("\\sysname{} vs.\\ N3D", ["base"], cs),
-             ("\\sysname{} vs.\\ FT-clips (synthesis)", ftc, cs),
-             ("\\sysname{}-I vs.\\ FT-clips (synthesis)", ftc, ["c3_inter"]),
-             ("FT-clips vs.\\ FT-meet (in-the-wild clips)", ["c3_nomsd"], ftc),
-             ("N3D, $M=396$ vs.\\ $M=264$ (memory)", ["base"], ["base_sc396"])]
-    groups = [("All", TEST), ("MSDWild many", ["msdwild_many"]), ("MSDWild few", ["msdwild_few"]),
-              ("Meetings", ["ami_test_mhm", "ami_test_sdm", "ali_test_near", "ali_test_far", "aishell4_test"])]
-    lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Paired bootstrap over recordings ($10^4$ resamples) for the pooled DER difference (B $-$ A, points). "
-             "For multi-seed systems, per-recording errors are averaged over the seeds. $p$: one-sided, fraction of resamples in "
-             "which B is not better than A (no correction for multiple comparisons; bootstrap seed 0).}\\label{tab:stats}",
-             "\\small\\setlength{\\tabcolsep}{4pt}",
-             "\\begin{tabular}{llccc}\n\\toprule",
-             "Comparison (B vs.\\ A) & Test sets & $\\Delta$DER & 95\\% CI & $p$\\\\\n\\midrule"]
+    ftc, cs, ci, cip = have(FTC), have(FT), have(CI), have(CIP)
+    pairs = [("\\sysname{} vs.\\ N3D", ["base"], ci), ("\\sysname{}-P vs.\\ N3D", ["base"], cip),
+             ("\\sysname{} vs.\\ FT-clips", ftc, ci), ("\\sysname{}-P vs.\\ FT-clips", ftc, cip),
+             ("\\sysname{} vs.\\ SimConv-MSD", have(SCM), ci),
+             ("\\sysname{} vs.\\ FastMSS", have(FMS), ci),
+             ("\\sysname{} vs.\\ \\sysname{}-C", cs, ci),
+             ("\\sysname{}-P vs.\\ \\sysname{}", ci, cip),
+             ("FT-clips vs.\\ FT-meet", have(FTM), ftc)]
+    groups = [("All", TEST), ("many", ["msdwild_many"]), ("few", ["msdwild_few"]),
+              ("Meet.", ["ami_test_mhm", "ami_test_sdm", "ali_test_near", "ali_test_far", "aishell4_test"]),
+              ("AVA", ["avaavd_test"])]
+    res = {}
     for lab, a, b in pairs:
         for gname, sets in groups:
-            r = boot(a, b, sets)
-            if r is None:
+            if a and b:
+                res[(lab, gname)] = boot(a, b, sets)
+    ps = sorted((r["p_B_not_better"], k) for k, r in res.items() if r)
+    m, holm = len(ps), set()
+    for i, (pv, k) in enumerate(ps):
+        if pv > 0.05 / (m - i):
+            break
+        holm.add(k)
+    lines = ["\\begin{table}[!tbph]\n\\centering",
+             "\\caption{Paired bootstrap tests. Difference of the pooled DER (B $-$ A, points) at 1.04~s latency; views of one meeting and clips of one film are resampled together, "
+             "and per-recording errors are averaged over seeds. $^{*}$: one-sided $p<0.05$; $^{**}$: $p<0.001$; bold: significant after "
+             f"Holm--Bonferroni correction over the {m} tests. Many/few: MSDWild; Meet.: five meeting sets; AVA: AVA-AVD.}}\\label{{tab:stats}}",
+             "\\small\\setlength{\\tabcolsep}{3pt}",
+             "\\begin{tabular}{lccccc}\n\\toprule",
+             "B vs.\\ A & All & many & few & Meet. & AVA\\\\\n\\midrule"]
+    for lab, a, b in pairs:
+        cells = []
+        for gname, _ in groups:
+            r = res.get((lab, gname))
+            if not r:
+                cells.append("--")
                 continue
-            pv = "$<$0.001" if r['p_B_not_better'] < 0.001 else f"{r['p_B_not_better']:.3f}"
-            lines.append(f"{lab} & {gname} & ${r['delta']:+.2f}$ & $[{r['ci95'][0]:+.2f}, {r['ci95'][1]:+.2f}]$ & {pv}\\\\")
+            pv = r["p_B_not_better"]
+            star = "$^{**}$" if pv < 0.001 else ("$^{*}$" if pv < 0.05 else "")
+            v = f"${r['delta']:+.2f}$".replace("-0.00", "0.00").replace("+0.00", "0.00")
+            cells.append((f"\\textbf{{{v}}}" if (lab, gname) in holm else v) + star)
+        lines.append(lab + " & " + " & ".join(cells) + "\\\\")
     lines.append("\\bottomrule\n\\end{tabular}\n\\end{table}")
     write("stats", "\n".join(lines))
+    for k, r in res.items():
+        if r:
+            print("STAT", k, r["delta"], r["ci95"], r["p_B_not_better"], "holm" if k in holm else "")
 
 
 def capacity_table():
@@ -214,8 +285,8 @@ def capacity_table():
         if r["name"] == "N3D" and r["profile"] == "1.04" and r["batch"] == 16:
             speed[r.get("spkcache", 264)] = r["rtfx"]
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Inference-time memory size of the released model at 1.04~s latency, without retraining: DER (\\%) "
-             "and throughput (RTFx, batch 16, RTX 5090). The adaptive budget uses $(\\beta,M_{\\min},M_{\\max})=(50,264,396)$.}"
+             "\\caption{Size of the speaker cache at inference. DER (\\%) and throughput (RTFx, batch 16, RTX 5090) of the released model at 1.04~s latency, "
+             "with the cache size changed at inference without retraining. The adaptive budget uses $(\\beta,M_{\\min},M_{\\max})=(50,264,396)$.}"
              "\\label{tab:capacity}",
              "\\small\\setlength{\\tabcolsep}{4pt}", HEADER.replace("Pooled\\\\", "Pooled & RTFx\\\\").replace("{l" + "c" * 8 + "}", "{l" + "c" * 9 + "}").replace(" & \\\\\n\\cmidrule", " & & \\\\\n\\cmidrule")]
     for c in sizes:

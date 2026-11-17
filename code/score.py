@@ -116,6 +116,9 @@ def main():
     ap.add_argument("--per-file", action="store_true")
     ap.add_argument("--tag", default="")
     ap.add_argument("--workers", type=int, default=12)
+    ap.add_argument("--label", default=None,
+                    help="name recorded as 'decode' and used for the per-file json (default: --decode), "
+                         "e.g. acd_tuned or thr_c025")
     a = ap.parse_args()
     items = [json.loads(l) for l in open(a.manifest)]
     items = [it for it in items if os.path.exists(os.path.join(a.pred_dir, os.path.basename(it["audio_filepath"])[:-4] + ".npz"))]
@@ -127,12 +130,15 @@ def main():
     der = sum(agg.values())
     sca = np.mean([r["n_hyp"] == r["n_ref"] for r in res.values()]) * 100
     mae = np.mean([abs(r["n_hyp"] - r["n_ref"]) for r in res.values()])
-    out = {"tag": a.tag, "pred_dir": a.pred_dir, "decode": a.decode, "n_files": len(res), "DER": round(der, 2),
+    label = a.label or a.decode
+    out = {"tag": a.tag, "pred_dir": a.pred_dir, "decode": label, "n_files": len(res), "DER": round(der, 2),
            "miss": round(agg["miss"], 2), "fa": round(agg["fa"], 2), "conf": round(agg["conf"], 2),
            "SCA": round(sca, 2), "MAE": round(float(mae), 4), "ref_hours": round(tot / 3600, 2)}
+    if a.label:
+        out.update({"decode_method": a.decode, "acd_params": acd, "thr": a.thr, "collar": a.collar})
     print(json.dumps(out))
     if a.per_file:
-        with open(os.path.join(a.pred_dir, f"_perfile_{a.decode}.json"), "w") as f:
+        with open(os.path.join(a.pred_dir, f"_perfile_{label}.json"), "w") as f:
             json.dump(res, f)
 
 

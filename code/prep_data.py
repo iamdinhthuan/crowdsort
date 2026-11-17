@@ -7,8 +7,6 @@ Layout:
 
 Usage: python prep_data.py {ami,alimeeting,aishell4,msdwild} [--splits ...]
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import glob
 import io
@@ -21,7 +19,7 @@ from concurrent.futures import ProcessPoolExecutor
 import numpy as np
 import soundfile as sf
 
-ROOT = CROWDSORT_ROOT + "/data"
+ROOT = "/mnt/ssd2/paper/paper_1/data"
 RAW = f"{ROOT}/raw"
 FA = f"{ROOT}/refs/diar-forced-alignment"
 

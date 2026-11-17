@@ -3,8 +3,6 @@
 python bench_speed.py --model base|<nemo> [--sfx-json ..] --profile 1.04 --batch 1 --seconds 600
 Uses the first files of AMI test (Mix-Headset) cut to --seconds; reports the median of 3 runs after warm-up.
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 import os
@@ -32,7 +30,7 @@ def main():
     a = ap.parse_args()
     m = load_model(a.model, a.sfx_json, a.cache_rescore, torch.device("cuda"))
     set_profile(m, a.profile, a.spkcache)
-    items = [json.loads(l) for l in open(CROWDSORT_ROOT + "/data/manifests/ami_test_mhm.jsonl")][: a.batch]
+    items = [json.loads(l) for l in open("/mnt/ssd2/paper/paper_1/data/manifests/ami_test_mhm.jsonl")][: a.batch]
     x = np.stack([sf.read(it["audio_filepath"], dtype="float32", frames=a.seconds * 16000)[0] for it in items])
     xa = torch.from_numpy(x).cuda()
     la = torch.full((len(items),), x.shape[1], device="cuda")
@@ -51,7 +49,7 @@ def main():
     out = {"name": a.name or a.model, "profile": a.profile, "spkcache": a.spkcache or 264, "batch": a.batch, "rtfx": round(rtfx, 1),
            "params_M": round(n_params / 1e6, 2), "new_params_M": round(n_new / 1e6, 3)}
     print(json.dumps(out))
-    with open(CROWDSORT_ROOT + "/results/speed.jsonl", "a") as f:
+    with open("/mnt/ssd2/paper/paper_1/results/speed.jsonl", "a") as f:
         f.write(json.dumps(out) + "\n")
 
 

@@ -3,10 +3,10 @@
 python fig_nspk.py --systems base:N3D,ft_base_s1:N3D-FT,sfx_full_s1:Proposed --out paper/tex/fig_nspk.pdf
 Pools MSDWild few+many (1.04 s) by reference speaker count; prints the table it plots.
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
+import os
+import sys
 from collections import defaultdict
 
 import matplotlib
@@ -15,8 +15,8 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-ROOT = CROWDSORT_ROOT
-STYLE = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "figure.mplstyle")
+ROOT = "/mnt/ssd2/paper/paper_1"
+STYLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "csl-figure.mplstyle")
 BINS = [(2, 2, "2"), (3, 3, "3"), (4, 4, "4"), (5, 5, "5"), (6, 6, "6"), (7, 7, "7"), (8, 8, "8"), (9, 10, "9-10")]
 
 
@@ -26,6 +26,8 @@ def main():
     ap.add_argument("--sets", default="msdwild_few,msdwild_many")
     ap.add_argument("--profile", default="1.04")
     ap.add_argument("--out", required=True)
+    ap.add_argument("--width-mm", type=float, default=140)
+    ap.add_argument("--height-mm", type=float, default=50)
     a = ap.parse_args()
     systems = [s.split(":") for s in a.systems.split(",")]
     table = {}
@@ -48,19 +50,27 @@ def main():
         print(n.ljust(8) + "".join(
             (f"{table[l][n][0]:6.2f}/{table[l][n][1]:4.2f}" if n in table[l] else "-").rjust(16) for _, l in systems)
             + f"   n={table[systems[0][1]][n][2]}")
-    plt.style.use(STYLE)
-    fig, axs = plt.subplots(1, 2, figsize=(140 / 25.4, 50 / 25.4))
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import figstyle as FS
+    FS.apply()
+    fig, axs = plt.subplots(1, 2, figsize=(FS.COL_W, a.height_mm / 25.4),
+                            gridspec_kw={"wspace": 0.42, "left": 0.13, "right": 0.99, "top": 0.80, "bottom": 0.2})
     x = np.arange(len(names))
     for _, lab in systems:
-        axs[0].plot(x, [table[lab][n][0] for n in names], label=lab)
-        axs[1].plot(x, [table[lab][n][1] for n in names], label=lab)
-    for ax, yl in zip(axs, ["DER (%)", "Speaker count MAE"]):
+        st = FS.SYSTEMS[lab]
+        kw = dict(color=st["color"], marker=st["marker"], ls=st["ls"], label=lab, markersize=3.2, linewidth=1.0)
+        axs[0].plot(x, [table[lab][n][0] for n in names], **kw)
+        axs[1].plot(x, [table[lab][n][1] for n in names], **kw)
+    for ax, yl, t in zip(axs, ["DER (%)", "Speaker count MAE"], ["(a)", "(b)"]):
         ax.set_xticks(x)
-        ax.set_xticklabels(names)
-        ax.set_xlabel("Reference number of speakers")
-        ax.set_ylabel(yl)
-    axs[0].legend(loc="upper left")
-    fig.savefig(a.out)
+        ax.set_xticklabels(["9+" if n == "9-10" else n for n in names])
+        ax.set_xlabel("Number of speakers", labelpad=1.5)
+        ax.set_ylabel(yl, labelpad=1.5)
+        ax.set_title(t, loc="left", fontsize=8, fontweight="bold", pad=2)
+    h, l = axs[0].get_legend_handles_labels()
+    fig.legend(h, l, loc="upper center", ncol=2, frameon=False, bbox_to_anchor=(0.5, 1.0),
+               handlelength=1.8, columnspacing=1.0)
+    FS.save(fig, a.out)
     json.dump(table, open(f"{ROOT}/results/nspk_table.json", "w"), indent=1)
     print("saved", a.out)
 

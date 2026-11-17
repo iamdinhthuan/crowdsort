@@ -1,10 +1,8 @@
 """Run inference + scoring for a model over sets x profiles; append results to results/results.jsonl."""
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse, json, os, subprocess, sys
 
-ROOT = CROWDSORT_ROOT
-PY = sys.executable
+ROOT = "/mnt/ssd2/paper/paper_1"
+PY = f"{ROOT}/.venv-sfx/bin/python"
 ENV = dict(os.environ, PYTHONPATH=f"{ROOT}/code")
 
 

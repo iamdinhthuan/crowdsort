@@ -6,8 +6,6 @@ python fig_timeline.py --out paper/tex/fig_timeline.pdf \
 Hypothesis channels are mapped to reference speakers with the optimal (Hungarian) mapping over the whole
 recording, so colours are comparable; unmapped channels are drawn in grey.
 """
-import os as _os
-CROWDSORT_ROOT = _os.environ.get("CROWDSORT_ROOT", _os.path.dirname(_os.path.dirname(_os.path.abspath(__file__))))
 import argparse
 import json
 import os
@@ -18,10 +16,14 @@ import numpy as np
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 from scipy.optimize import linear_sum_assignment  # noqa: E402
+import sys  # noqa: E402
 
-ROOT = CROWDSORT_ROOT
-STYLE = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), "figure.mplstyle")
-COLORS = ["#0072B2", "#E69F00", "#009E73", "#D55E00", "#56B4E9", "#CC79A7", "#7A5195", "#B5A300", "#8C564B", "#1B9E77"]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import figstyle as FS  # noqa: E402
+
+ROOT = "/mnt/ssd2/paper/paper_1"
+STYLE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "csl-figure.mplstyle")
+COLORS = FS.SPEAKERS
 
 
 def ref_matrix(rttm, n):
@@ -50,56 +52,67 @@ def mapping(ref, hyp):
     return mp
 
 
-def draw(ax, mat, colors, t0, t1, label):
+def draw(ax, mat, colors, t0, t1, label, bold=False):
     n_rows = mat.shape[1]
     for k in range(n_rows):
         x = np.concatenate([[0], mat[:, k].astype(np.int8), [0]])
         d = np.diff(x)
         for s, e in zip(np.where(d == 1)[0], np.where(d == -1)[0]):
-            ax.broken_barh([(t0 + s / 100, (e - s) / 100)], (n_rows - 1 - k + 0.1, 0.8), facecolors=colors[k],
+            ax.broken_barh([(t0 + s / 100, (e - s) / 100)], (n_rows - 1 - k + 0.12, 0.76), facecolors=colors[k],
                            edgecolor="none")
     ax.set_ylim(0, max(n_rows, 1))
     ax.set_yticks([])
     ax.set_xlim(t0, t1)
-    ax.set_ylabel(label, rotation=0, ha="right", va="center", labelpad=4)
-    for side in ("left",):
-        ax.spines[side].set_visible(False)
+    ax.grid(False)
+    ax.set_ylabel(label, rotation=0, ha="right", va="center", labelpad=3,
+                  fontweight="bold" if bold else "normal")
+    ax.spines["left"].set_visible(False)
+    ax.spines["bottom"].set_color(FS.GRID)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--example", action="append", required=True, help="set:uid:start:end")
+    ap.add_argument("--title", action="append", default=[], help="panel title, one per example")
     ap.add_argument("--systems", required=True, help="model:label,...")
     ap.add_argument("--profile", default="1.04")
     ap.add_argument("--out", required=True)
-    ap.add_argument("--width-mm", type=float, default=190)
+    ap.add_argument("--bold", default="", help="label of the row to set in bold")
     a = ap.parse_args()
-    plt.style.use(STYLE)
+    FS.apply()
     systems = [s.split(":") for s in a.systems.split(",")]
-    n_rows_total = len(a.example) * (len(systems) + 1)
-    fig, axes = plt.subplots(n_rows_total, 1, figsize=(a.width_mm / 25.4, 0.55 * n_rows_total + 0.4),
-                             sharex=False)
+    nrow = len(systems) + 1
+    row_h = 0.18  # inches per row
+    heights = []
+    for _ in a.example:
+        heights += [1] * nrow + [2.6]
+    heights = heights[:-1]
+    fig_h = row_h * sum(heights) + 0.25
+    fig, axes = plt.subplots(len(heights), 1, figsize=(FS.TEXT_W, fig_h), gridspec_kw={"height_ratios": heights,
+                             "hspace": 0.08, "left": 0.105, "right": 0.982, "top": 0.97, "bottom": 0.06})
+    gap_axes = [axes[i] for i in range(len(heights)) if (i + 1) % (nrow + 1) == 0]
+    for g in gap_axes:
+        g.axis("off")
+    axes = [ax for ax in axes if ax not in gap_axes]
     row = 0
-    for ex in a.example:
+    for ei, ex in enumerate(a.example):
         sset, uid, t0, t1 = ex.split(":")
         t0, t1 = float(t0), float(t1)
-        dur = [json.loads(l)["duration"] for l in open(f"{ROOT}/data/manifests/{sset}.jsonl")
-               if os.path.basename(json.loads(l)["audio_filepath"])[:-4] == uid][0]
-        t1 = min(t1, dur)
-        item = [json.loads(l) for l in open(f"{ROOT}/data/manifests/{sset}.jsonl")
-                if os.path.basename(json.loads(l)["audio_filepath"])[:-4] == uid][0]
+        items = [json.loads(l) for l in open(f"{ROOT}/data/manifests/{sset}.jsonl")]
+        item = [it for it in items if os.path.basename(it["audio_filepath"])[:-4] == uid][0]
+        t1 = min(t1, item["duration"])
         probs = {m: np.load(f"{ROOT}/exp/{m}/{sset}/{a.profile}/{uid}.npz")["probs"].astype(np.float32)
                  for m, _ in systems}
         n = max(p.shape[0] for p in probs.values())
         ref = ref_matrix(item["rttm_filepath"], n)
         i0, i1 = int(t0 * 100), int(t1 * 100)
-        draw(axes[row], ref[i0:i1], COLORS, t0, t1, "Reference")
-        axes[row].set_title(f"{sset.replace('_', ' ')} / {uid}", loc="left", fontsize=7)
+        draw(axes[row], ref[i0:i1], COLORS, t0, t1, "Reference", bold=False)
+        title = a.title[ei] if ei < len(a.title) else f"{sset} / {uid}"
+        axes[row].set_title(f"({chr(97 + ei)}) {title}", loc="left", fontsize=7.5, pad=2.5, color=FS.INK)
         row += 1
         for m, lab in systems:
             hyp = probs[m] > 0.5
             mp = mapping(ref, hyp)
-            # rows follow the reference order; unmatched hypothesis channels appended in grey
             rows, cols = [], []
             for r_i in range(ref.shape[1]):
                 js = [j for j, rr in mp.items() if rr == r_i]
@@ -108,13 +121,18 @@ def main():
             for j in range(hyp.shape[1]):
                 if j not in mp and hyp[i0:i1, j].any():
                     rows.append(hyp[:, j])
-                    cols.append("#9E9E9E")
+                    cols.append(FS.UNMATCHED)
             mat = np.stack(rows, 1)[i0:i1]
-            draw(axes[row], mat, cols, t0, t1, lab)
+            draw(axes[row], mat, cols, t0, t1, lab, bold=(lab == a.bold))
             row += 1
-        axes[row - 1].set_xlabel("Time (s)")
-    fig.savefig(a.out)
-    print("saved", a.out)
+        for k in range(row - nrow, row - 1):
+            axes[k].tick_params(axis="x", labelbottom=False, length=0)
+            axes[k].spines["bottom"].set_visible(False)
+        last = axes[row - 1]
+        last.spines["bottom"].set_color(FS.AXIS)
+        last.set_xlabel("Time (s)", labelpad=1.5)
+    FS.save(fig, a.out)
+    print("saved", a.out, "height_mm", round(fig_h * 25.4, 1))
 
 
 if __name__ == "__main__":

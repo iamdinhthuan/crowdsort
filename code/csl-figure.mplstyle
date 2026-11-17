@@ -1,0 +1,37 @@
+# House figure style for CSL manuscripts (see references/figures-with-figma.md section 4).
+# Use: plt.style.use("<skill-dir>/assets/csl-figure.mplstyle") and set figsize to the final
+# printed size in inches (90, 140 or 190 mm wide).
+
+font.family:        sans-serif
+font.sans-serif:    Arial, Arimo, Liberation Sans, Helvetica, DejaVu Sans
+mathtext.fontset:   dejavusans
+font.size:          8
+axes.titlesize:     8
+axes.labelsize:     8
+xtick.labelsize:    7
+ytick.labelsize:    7
+legend.fontsize:    7
+legend.frameon:     False
+
+axes.linewidth:     0.6
+axes.spines.top:    False
+axes.spines.right:  False
+axes.grid:          False
+axes.prop_cycle:    (cycler('color', ['0072B2', 'E69F00', '009E73', 'D55E00', '56B4E9', 'CC79A7', '000000']) + cycler('marker', ['o', 's', '^', 'D', 'v', 'P', 'X']))
+lines.linewidth:    1.0
+lines.markersize:   3.5
+errorbar.capsize:   2
+xtick.major.width:  0.6
+ytick.major.width:  0.6
+xtick.major.size:   2.5
+ytick.major.size:   2.5
+grid.linewidth:     0.4
+grid.color:         D9D9D9
+
+figure.dpi:         150
+savefig.dpi:        600
+savefig.bbox:       standard
+figure.constrained_layout.use: True
+pdf.fonttype:       42
+ps.fonttype:        42
+svg.fonttype:       none
