@@ -1,0 +1,26 @@
+{
+ "SimConv-MSD sessions": {
+  "excerpts": 400,
+  "mean_duration_s": 81.0,
+  "mean_speakers": 6.12,
+  "late_speaker_share_pct": 25.6,
+  "excerpts_with_late_speaker_pct": 74.8,
+  "returns_per_min": 5.98
+ },
+ "SimConv-MSD-M sessions": {
+  "excerpts": 400,
+  "mean_duration_s": 78.4,
+  "mean_speakers": 6.16,
+  "late_speaker_share_pct": 24.7,
+  "excerpts_with_late_speaker_pct": 75.8,
+  "returns_per_min": 5.78
+ },
+ "FastMSS sessions": {
+  "excerpts": 400,
+  "mean_duration_s": 87.0,
+  "mean_speakers": 6.31,
+  "late_speaker_share_pct": 17.8,
+  "excerpts_with_late_speaker_pct": 66.2,
+  "returns_per_min": 7.6
+ }
+}

@@ -73,9 +73,9 @@ def sources_table(rows):
     lines = ["\\begin{table}[!tbph]\n\\centering",
              "\\caption{Comparison of synthetic training data. DER at 1.04~s latency; every system uses the same real data, "
              "recipe and number of synthetic samples (2388; 2400 for the return operator alone), except the 25\\% row, and differs only in how the synthetic sessions "
-             "are built. DER in \\%; Meetings and Pooled are pooled over the five meeting test sets and all seven test sets. "
+             "are built; SimConv-MSD-M matches the speaker count and duration of the \\sysname{} sessions. DER in \\%; Meetings and Pooled are pooled over the five meeting test sets and all seven test sets. "
              "$\\Delta$: difference from FT-clips on MSDWild many and AVA-AVD (paired bootstrap; AVA-AVD clips grouped by film; "
-             "$^{*}$ and $^{\\#}$: one-sided $p<0.05$ for a decrease and for an increase, unadjusted). Multi-seed systems are averaged per recording.}\\label{tab:sources}",
+             "$^{*}$: one-sided $p<0.05$ for a decrease, unadjusted). Multi-seed systems are averaged per recording.}\\label{tab:sources}",
              "\\small\\setlength{\\tabcolsep}{2pt}",
              "\\adjustbox{max width=\\textwidth}{\\begin{tabular}{lclccccccc}\n\\toprule",
              "Synthetic data & Seeds & Source & MSDWild many & $\\Delta$ & MSDWild few & Meetings & Pooled & AVA-AVD & $\\Delta$\\\\\n\\midrule"]
@@ -101,7 +101,7 @@ def external_table(rows):
              "scored once after the method was fixed) with the forced-alignment references of the published evaluation (FA) and with "
              "word-timing references (Words). The released model was trained on the NOTSOFAR-1 training and development sets. "
              "$\\Delta$: difference from N3D (paired bootstrap grouped by film or meeting; $^{*}$ and $^{\\#}$: one-sided $p<0.05$ "
-             "for a decrease and for an increase, unadjusted). +N: the NOTSOFAR-1 training and development sets are added to the fine-tuning mix (13\\% of the samples). Systems with several seeds are averaged per recording.}\\label{tab:external}",
+             "for a decrease and for an increase, unadjusted). +N: the NOTSOFAR-1 training and development sets are added to the fine-tuning mix (13\\% of the samples). Systems with several seeds are averaged per recording. The +N rows are follow-up runs added after the first scoring.}\\label{tab:external}",
              "\\small\\setlength{\\tabcolsep}{2pt}",
              "\\adjustbox{max width=\\textwidth}{\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}l" + "c" * ncol + "}\n\\toprule",
              " & " + " & ".join(f"\\multicolumn{{4}}{{c}}{{{n}}}" for _, n in corp) + "\\\\",
@@ -131,14 +131,14 @@ if __name__ == "__main__":
     sources_table([
         ("None (FT-clips)", "--", FTC),
         ("SimConv-MSD", "MSDWild", SCM),
-        ("SimConv-MSD-M, matched speakers and durations", "MSDWild", ["c3_simconvm_s1", "c3_simconvm_s2", "c3_simconvm_s3"]),
+        ("SimConv-MSD-M", "MSDWild", ["c3_simconvm_s1", "c3_simconvm_s2", "c3_simconvm_s3"]),
         ("FastMSS", "LibriSpeech", FMS),
         ("Arrival operator (\\sysname{}-C)", "MSDWild", CSC),
         ("Return operator (\\sysname{}-I)", "MSDWild", ["c3_inter", "c3_inter_s2", "c3_inter_s3"]),
         ("Both operators (\\sysname{})", "MSDWild", ["c3_ci_s1", "c3_ci_s2", "c3_ci_s3"]),
         ("\\quad + boundary masking (\\sysname{}-P)", "MSDWild", ["c3_cip_s1", "c3_cip_s2", "c3_cip_s3"]),
         ("Arrival operator, 2386 distinct sessions", "MSDWild", ["c3_concatu_s1"]),
-        ("Arrival operator, 25\\% synthetic share", "MSDWild", ["c3_concat25_s1"]),
+        ("Arrival operator, 2386 sessions, 25\\% share", "MSDWild", ["c3_concat25_s1"]),
         ("Both operators, 4--8 speakers per session", "MSDWild", ["c3_ck3_s1", "c3_ck3_s2", "c3_ck3_s3"]),
     ])
     external_table([

@@ -192,7 +192,7 @@ def main_table():
 
 def latency_table():
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Results at three latency settings. DER (\\%) at 30.4, 1.04 and 0.32~s latency; seed 1 for the fine-tuned models.}\\label{tab:latency}",
+             "\\caption{Results at three latency settings. DER (\\%) at 30.4, 1.04 and 0.32~s latency; seed 1 for the fine-tuned models. Best value per column and latency in bold.}\\label{tab:latency}",
              "\\small\\setlength{\\tabcolsep}{4pt}", HEADER]
     for p in ["30.4", "1.04", "0.32"]:
         lines.append(f"\\multicolumn{{9}}{{l}}{{\\emph{{Input-buffer latency {p}~s}}}}\\\\")
@@ -239,7 +239,7 @@ def stats_table():
              ("\\sysname{} vs.\\ \\sysname{}-C", cs, ci),
              ("\\sysname{}-P vs.\\ \\sysname{}", ci, cip),
              ("FT-clips vs.\\ FT-meet", have(FTM), ftc)]
-    groups = [("All", TEST), ("many", ["msdwild_many"]), ("few", ["msdwild_few"]),
+    groups = [("Pooled", TEST), ("many", ["msdwild_many"]), ("few", ["msdwild_few"]),
               ("Meet.", ["ami_test_mhm", "ami_test_sdm", "ali_test_near", "ali_test_far", "aishell4_test"]),
               ("AVA", ["avaavd_test"])]
     res = {}
@@ -259,7 +259,7 @@ def stats_table():
              f"Holm--Bonferroni correction over the {m} tests. Many/few: MSDWild; Meet.: five meeting sets; AVA: AVA-AVD.}}\\label{{tab:stats}}",
              "\\small\\setlength{\\tabcolsep}{3pt}",
              "\\begin{tabular}{lccccc}\n\\toprule",
-             "B vs.\\ A & All & many & few & Meet. & AVA\\\\\n\\midrule"]
+             "B vs.\\ A & Pooled & many & few & Meet. & AVA\\\\\n\\midrule"]
     for lab, a, b in pairs:
         cells = []
         for gname, _ in groups:
