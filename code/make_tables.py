@@ -288,7 +288,7 @@ def capacity_table():
             speed[r.get("spkcache", 264)] = r["rtfx"]
     lines = ["\\begin{table}[!tbph]\n\\centering",
              "\\caption{Size of the speaker cache at inference. DER (\\%) and throughput (RTFx, batch 16, RTX 5090) of the released model at 1.04~s latency, "
-             "with the cache size changed at inference without retraining. The adaptive budget uses $(\\beta,M_{\\min},M_{\\max})=(50,264,396)$.}"
+             "with the cache size changed at inference without retraining. The adaptive budget uses $(\\varphi,M_{\\min},M_{\\max})=(50,264,396)$.}"
              "\\label{tab:capacity}",
              "\\small\\setlength{\\tabcolsep}{4pt}", HEADER.replace("Pooled\\\\", "Pooled & RTFx\\\\").replace("{l" + "c" * 8 + "}", "{l" + "c" * 9 + "}").replace(" & \\\\\n\\cmidrule", " & & \\\\\n\\cmidrule")]
     for c in sizes:

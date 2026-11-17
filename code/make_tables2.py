@@ -73,7 +73,7 @@ def sources_table(rows):
     lines = ["\\begin{table}[!tbph]\n\\centering",
              "\\caption{Comparison of synthetic training data. DER at 1.04~s latency; every system uses the same real data, "
              "recipe and number of synthetic samples (2388; 2400 for the return operator alone), except the 25\\% row, and differs only in how the synthetic sessions "
-             "are built; SimConv-MSD-M matches the speaker count and duration of the \\sysname{} sessions. DER in \\%; Meetings and Pooled are pooled over the five meeting test sets and all seven test sets. "
+             "are built; SimConv-MSD-M matches the speaker count and duration of the arrival sessions. DER in \\%; Meetings and Pooled are pooled over the five meeting test sets and all seven test sets. "
              "$\\Delta$: difference from FT-clips on MSDWild many and AVA-AVD (paired bootstrap; AVA-AVD clips grouped by film; "
              "$^{*}$: one-sided $p<0.05$ for a decrease, unadjusted). Multi-seed systems are averaged per recording.}\\label{tab:sources}",
              "\\small\\setlength{\\tabcolsep}{2pt}",
