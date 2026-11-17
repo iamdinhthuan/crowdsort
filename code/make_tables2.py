@@ -131,6 +131,7 @@ if __name__ == "__main__":
     sources_table([
         ("None (FT-clips)", "--", FTC),
         ("SimConv-MSD", "MSDWild", SCM),
+        ("SimConv-MSD-M, matched speakers and durations", "MSDWild", ["c3_simconvm_s1", "c3_simconvm_s2", "c3_simconvm_s3"]),
         ("FastMSS", "LibriSpeech", FMS),
         ("Arrival operator (\\sysname{}-C)", "MSDWild", CSC),
         ("Return operator (\\sysname{}-I)", "MSDWild", ["c3_inter", "c3_inter_s2", "c3_inter_s3"]),

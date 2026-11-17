@@ -1,0 +1,34 @@
+{
+ "Arrival sessions": {
+  "excerpts": 400,
+  "mean_duration_s": 79.3,
+  "mean_speakers": 5.96,
+  "late_speaker_share_pct": 44.3,
+  "excerpts_with_late_speaker_pct": 83.0,
+  "returns_per_min": 1.04
+ },
+ "Return sessions": {
+  "excerpts": 400,
+  "mean_duration_s": 81.7,
+  "mean_speakers": 6.32,
+  "late_speaker_share_pct": 35.4,
+  "excerpts_with_late_speaker_pct": 80.0,
+  "returns_per_min": 3.03
+ },
+ "MSDWild clips": {
+  "excerpts": 400,
+  "mean_duration_s": 41.2,
+  "mean_speakers": 2.49,
+  "late_speaker_share_pct": 3.8,
+  "excerpts_with_late_speaker_pct": 8.8,
+  "returns_per_min": 1.0
+ },
+ "Meetings": {
+  "excerpts": 400,
+  "mean_duration_s": 103.7,
+  "mean_speakers": 3.59,
+  "late_speaker_share_pct": 21.5,
+  "excerpts_with_late_speaker_pct": 46.0,
+  "returns_per_min": 2.38
+ }
+}

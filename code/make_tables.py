@@ -146,6 +146,7 @@ def write(name, text):
 
 FTC = ["c3_noconcat", "c3_noconcat_s2", "c3_noconcat_s3"]
 SCM = ["c3_simconvmsd_s1", "c3_simconvmsd_s2", "c3_simconvmsd_s3"]
+SCMM = ["c3_simconvm_s1", "c3_simconvm_s2", "c3_simconvm_s3"]
 FMS = ["c3_fastmss_s1", "c3_fastmss_s2", "c3_fastmss_s3"]
 FTM = ["c3_nomsd", "c3_nomsd_s2", "c3_nomsd_s3"]
 INTER = ["c3_inter", "c3_inter_s2", "c3_inter_s3"]
@@ -233,6 +234,7 @@ def stats_table():
     pairs = [("\\sysname{} vs.\\ N3D", ["base"], ci), ("\\sysname{}-P vs.\\ N3D", ["base"], cip),
              ("\\sysname{} vs.\\ FT-clips", ftc, ci), ("\\sysname{}-P vs.\\ FT-clips", ftc, cip),
              ("\\sysname{} vs.\\ SimConv-MSD", have(SCM), ci),
+             ("\\sysname{} vs.\\ SimConv-MSD-M", have(SCMM), ci),
              ("\\sysname{} vs.\\ FastMSS", have(FMS), ci),
              ("\\sysname{} vs.\\ \\sysname{}-C", cs, ci),
              ("\\sysname{}-P vs.\\ \\sysname{}", ci, cip),

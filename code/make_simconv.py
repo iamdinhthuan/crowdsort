@@ -6,7 +6,11 @@ speakers from different clips are combined, and turns are placed one after anoth
 (pauses, or overlaps when negative) and speaker-change probability drawn from the empirical statistics of the
 training clips themselves. Session durations follow the concatenation sessions (60-200 s).
 
-python make_simconv.py SRC_MANIFEST NAME N SEED
+python make_simconv.py SRC_MANIFEST NAME N SEED [--match REF_MANIFEST]
+
+--match REF_MANIFEST: matched control. Every one of the 5-8 chosen speakers must appear in the session (sessions in
+which a chosen speaker never takes a turn are redrawn), and session durations are drawn from the durations of
+REF_MANIFEST (the concatenated sessions), so that speaker count and duration follow CrowdSort.
 """
 import json
 import os
@@ -52,7 +56,9 @@ def single_regions(segs):
 
 def main():
     src, name, n, seed = sys.argv[1], sys.argv[2], int(sys.argv[3]), int(sys.argv[4])
+    match = sys.argv[sys.argv.index("--match") + 1] if "--match" in sys.argv else None
     random.seed(seed)
+    ref_durs = [json.loads(l)["duration"] for l in open(f"{ROOT}/manifests/{match}.jsonl")] if match else None
     clips = [json.loads(l) for l in open(f"{ROOT}/manifests/{src}.jsonl")]
     clips = [c for c in clips if 10 <= c["duration"] <= 150]
     pools, gaps, same, turns = [], [], 0, 0
@@ -84,8 +90,9 @@ def main():
             cache[path] = x / (np.abs(x).max() + 1e-6)
         return cache[path]
 
-    for i in range(n):
-        target_len = random.uniform(60, 200)
+    i, redraws = 0, 0
+    while i < n:
+        target_len = random.choice(ref_durs) if match else random.uniform(60, 200)
         nspk = random.randint(5, 8)
         chosen, used = [], set()
         while len(chosen) < nspk:
@@ -113,6 +120,9 @@ def main():
             buf[i0:i0 + len(x)] += x
             rttm.append((start, len(x) / SR, lab))
             t_end = max(t_end, start + len(x) / SR)
+        if match and len({k for _, _, k in rttm}) < nspk:
+            redraws += 1
+            continue
         wav_all = buf[: int(t_end * SR)]
         sid = f"{name}_{i:04d}"
         wav = f"{out_wav}/{sid}.wav"
@@ -124,9 +134,12 @@ def main():
         present = len({k for _, _, k in rttm})
         lines.append({"audio_filepath": wav, "offset": 0.0, "duration": round(t_end, 3), "label": "infer", "text": "-",
                       "num_speakers": present, "rttm_filepath": rp, "uem_filepath": None})
+        i += 1
     with open(f"{ROOT}/manifests/{name}.jsonl", "w") as f:
         for l in lines:
             f.write(json.dumps(l) + "\n")
+    if match:
+        print("redrawn sessions:", redraws)
     print(len(lines), "sessions", round(sum(l["duration"] for l in lines) / 3600, 1), "h",
           sorted(Counter(l["num_speakers"] for l in lines).items()))
 
