@@ -179,7 +179,7 @@ def main_table():
     t = ["\\begin{table}[!tbph]\n\\centering",
          "\\caption{Main results at 1.04~s latency. DER (\\%) on the seven test sets and on the unseen AVA-AVD test set. FT-meet: fine-tuned on real meetings only; "
          "FT-clips: real meetings and MSDWild clips without synthesis; SimConv-MSD and FastMSS: FT-clips plus simulated conversations; "
-         "\\sysname{}-C: arrival operator only; \\sysname{}: arrival and return operators; \\sysname{}-P: with boundary-masking perturbation. "
+         "\\sysname{}-C: arrival operator only; \\sysname{}: arrival and return operators; \\sysname{}-P: with boundary masking. "
          "Multi-seed rows pool per-recording errors averaged over seeds. Pooled: DER over all 759 recordings of the seven test sets. Best value per column in bold."
          + (" $^{\\dagger}$External streaming baseline: released DIHARD~III checkpoint of LS-EEND at 8~kHz and about 1~s latency, not fine-tuned." if rows[0][0].startswith("LS-EEND") else "")
          + "}\\label{tab:main}",
@@ -270,7 +270,7 @@ def stats_table():
             pv = r["p_B_not_better"]
             star = "$^{**}$" if pv < 0.001 else ("$^{*}$" if pv < 0.05 else "")
             v = f"${r['delta']:+.2f}$".replace("-0.00", "0.00").replace("+0.00", "0.00")
-            cells.append((f"\\textbf{{{v}}}" if (lab, gname) in holm else v) + star)
+            cells.append((f"$\\mathbf{{{v[1:-1]}}}$" if (lab, gname) in holm else v) + star)
         lines.append(lab + " & " + " & ".join(cells) + "\\\\")
     lines.append("\\bottomrule\n\\end{tabular}\n\\end{table}")
     write("stats", "\n".join(lines))
