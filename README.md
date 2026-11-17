@@ -3,12 +3,12 @@
 Code, data lists and per-recording results for the paper
 
 > D. T. Nguyen, L. P. Nguyen, V. H. Nguyen, M. R. Elara and A. V. Le. *CrowdSort: Many-speaker conversation synthesis for streaming Sortformer diarization in the wild.*
-> Submitted to Computer Speech & Language, 2026.
+> Manuscript in preparation for submission to Computer Speech & Language (not yet published).
 
 CrowdSort fine-tunes the released streaming diarization model
 [Nemotron 3 Diarization](https://huggingface.co/nvidia/Nemotron-3-Diarization) (N3D) with crowded sessions built
 from real multi-speaker units of annotated MSDWild clips. An arrival operator (concatenation, `code/make_concat.py`)
-lets new speakers enter after the speaker cache is full, and a return operator (interleaving,
+lets new speakers enter when the speaker cache already holds earlier speakers, and a return operator (interleaving,
 `code/make_interleave.py`) lets speakers leave and return. CrowdSort-P adds a boundary perturbation
 (`--perturb`, `code/perturb.py`). The architecture is unchanged, so inference cost equals that of the released model.
 
