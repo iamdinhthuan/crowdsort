@@ -45,6 +45,7 @@ Section 4.3.3).
 | `data_lists/*.txt` | Recording IDs of the held-out development splits and training subsets |
 | `data_lists/synth_rttm/` | Reference RTTMs of every synthesised or simulated session (speaker labels carry the source clip ID) |
 | `results/results.jsonl` | One line per system, test set, latency and decoding, with DER, its components, SCA and MAE |
+| `results/speaker_overlap/`, `results/sensitivity_many.json` | Post-hoc speaker and audio overlap check between MSDWild train and test (`code/speaker_overlap.py`) and MSDWild many results without matched or long recordings (`code/sensitivity_table.py`, Supplementary Table S1) |
 | `exp/<model>/<set>/<latency>/_perfile_<decoding>.json` | Per-recording errors of every evaluated system |
 | `REPRODUCE.md` | Environment, data preparation and every command used for the paper |
 
