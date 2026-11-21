@@ -71,11 +71,7 @@ def write(name, text):
 
 def sources_table(rows):
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Comparison of synthetic training data. DER at 1.04~s latency; every system uses the same real data, "
-             "recipe and number of synthetic samples (2388; 2400 for the return operator alone), except the 25\\% row, and differs only in how the synthetic sessions "
-             "are built; SimConv-MSD-M matches the speaker count and duration of the arrival sessions. DER in \\%; Meetings and Pooled are pooled over the five meeting test sets and all seven test sets. "
-             "$\\Delta$: difference from FT-clips on MSDWild many and AVA-AVD (paired bootstrap; AVA-AVD clips grouped by film; "
-             "$^{*}$: one-sided $p<0.05$ for a decrease, unadjusted). Multi-seed systems are averaged per recording.}\\label{tab:sources}",
+             "\\caption{Comparison of synthetic training data. DER (\\%) of systems that differ only in how the synthetic sessions are built. Meetings, Pooled: five meeting sets and all seven test sets; $\\Delta$: difference from FT-clips; $^{*}$: significant decrease ($p<0.05$).}\\label{tab:sources}",
              "\\small\\setlength{\\tabcolsep}{2pt}",
              "\\adjustbox{max width=\\textwidth}{\\begin{tabular}{lclccccccc}\n\\toprule",
              "Synthetic data & Seeds & Source & MSDWild many & $\\Delta$ & MSDWild few & Meetings & Pooled & AVA-AVD & $\\Delta$\\\\\n\\midrule"]
@@ -96,12 +92,7 @@ def external_table(rows):
     corp = [c for c in corp if have(["base"], [c[0]])]
     ncol = 4 * len(corp)
     lines = ["\\begin{table*}[!tbph]\n\\centering",
-             "\\caption{Results on held-out corpora. DER (\\%) on test data used for neither training nor checkpoint selection: AVA-AVD (unseen corpus, "
-             "evaluated during development, so exploratory) and the NOTSOFAR-1 evaluation set (single-channel track, 160 recordings, "
-             "scored once after the method was fixed) with the forced-alignment references of the published evaluation (FA) and with "
-             "word-timing references (Words). The released model was trained on the NOTSOFAR-1 training and development sets. "
-             "$\\Delta$: difference from N3D (paired bootstrap grouped by film or meeting; $^{*}$ and $^{\\#}$: one-sided $p<0.05$ "
-             "for a decrease and for an increase, unadjusted). +N: the NOTSOFAR-1 training and development sets are added to the fine-tuning mix (13\\% of the samples). Systems with several seeds are averaged per recording. The +N rows are follow-up runs added after the first scoring.}\\label{tab:external}",
+             "\\caption{Results on held-out corpora. DER (\\%) on AVA-AVD and on NOTSOFAR-1 with forced-alignment (FA) and word-timing (Words) references. $\\Delta$: difference from N3D; $^{*}$/$^{\\#}$: significant decrease/increase ($p<0.05$); +N: NOTSOFAR-1 training data added to fine-tuning.}\\label{tab:external}",
              "\\small\\setlength{\\tabcolsep}{2pt}",
              "\\adjustbox{max width=\\textwidth}{\\begin{tabular*}{\\textwidth}{@{\\extracolsep{\\fill}}l" + "c" * ncol + "}\n\\toprule",
              " & " + " & ".join(f"\\multicolumn{{4}}{{c}}{{{n}}}" for _, n in corp) + "\\\\",

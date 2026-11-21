@@ -177,12 +177,7 @@ def main_table():
         body = [body[0].replace("\\textbf{", "{"), "\\midrule"] + body[1:]
     head = HEADER.replace("{l" + "c" * 8 + "}", "{l" + "c" * 9 + "}").replace(" & \\\\\n\\cmidrule", " & & \\\\\n\\cmidrule").replace("Pooled\\\\", "Pooled & AVA-AVD\\\\")
     t = ["\\begin{table}[!tbph]\n\\centering",
-         "\\caption{Main results at 1.04~s latency. DER (\\%) on the seven test sets and on the unseen AVA-AVD test set. FT-meet: fine-tuned on real meetings only; "
-         "FT-clips: real meetings and MSDWild clips without synthesis; SimConv-MSD and FastMSS: FT-clips plus simulated conversations; "
-         "\\sysname{}-C: arrival operator only; \\sysname{}: arrival and return operators; \\sysname{}-P: with boundary masking. "
-         "Multi-seed rows pool per-recording errors averaged over seeds. Pooled: DER over all 759 recordings of the seven test sets. Best value per column in bold."
-         + (" $^{\\dagger}$External streaming baseline: released DIHARD~III checkpoint of LS-EEND at 8~kHz and about 1~s latency, not fine-tuned." if rows[0][0].startswith("LS-EEND") else "")
-         + "}\\label{tab:main}",
+         "\\caption{Main results. DER (\\%) on the seven test sets, pooled over them, and on the unseen AVA-AVD set; best value per column in bold. $^{\\dagger}$External streaming baseline, not fine-tuned.}\\label{tab:main}",
          "\\small\\setlength{\\tabcolsep}{4pt}", head] + body + ["\\bottomrule\n\\end{tabular}\n\\end{table}"]
     write("main", "\n".join(t))
     for lab, ms, *_ in rows:
@@ -192,7 +187,7 @@ def main_table():
 
 def latency_table():
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Results at three latency settings. DER (\\%) at 30.4, 1.04 and 0.32~s latency; seed 1 for the fine-tuned models. Best value per column and latency in bold.}\\label{tab:latency}",
+             "\\caption{Results at three latency settings. DER (\\%) at 30.4, 1.04 and 0.32~s latency; best value per column in bold.}\\label{tab:latency}",
              "\\small\\setlength{\\tabcolsep}{4pt}", HEADER]
     for p in ["30.4", "1.04", "0.32"]:
         lines.append(f"\\multicolumn{{9}}{{l}}{{\\emph{{Input-buffer latency {p}~s}}}}\\\\")
@@ -211,9 +206,7 @@ def ablation_table():
             ("capacity-elastic training, adaptive", "c3_elastic_ad66_462"),
             ("\\sysname{}-C, inference $M=396$", "ft3_s1_inf396"), ("\\sysname{}-C, adaptive budget", f"ft3_s1_{AD}")]
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Memory variants. Variants added to \\sysname{}-C (arrival operator only, seed 1), all fine-tuned with the same data, schedule and seed: "
-             "pooled DER (\\%) on the development and test sets, DER on the two test sets with many speakers, and the paired bootstrap "
-             "difference of the pooled test DER with respect to \\sysname{}-C (95\\% confidence interval).}\\label{tab:ablation}",
+             "\\caption{Memory variants. Pooled DER (\\%) of memory designs added to \\sysname{}-C and the change in pooled test DER relative to \\sysname{}-C (95\\% CI).}\\label{tab:ablation}",
              "\\small\\setlength{\\tabcolsep}{4pt}",
              "\\begin{tabular}{lccccc}\n\\toprule",
              "System & Dev & Test & AISHELL-4 & MSDWild many & $\\Delta$ test [95\\% CI]\\\\\n\\midrule"]
@@ -254,9 +247,7 @@ def stats_table():
             break
         holm.add(k)
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Paired bootstrap tests. Difference of the pooled DER (B $-$ A, points) at 1.04~s latency; views of one meeting and clips of one film are resampled together, "
-             "and per-recording errors are averaged over seeds. $^{*}$: one-sided $p<0.05$; $^{**}$: $p<0.001$; bold: significant after "
-             f"Holm--Bonferroni correction over the {m} tests. Many/few: MSDWild; Meet.: five meeting sets; AVA: AVA-AVD.}}\\label{{tab:stats}}",
+             "\\caption{Paired bootstrap tests. Difference of the pooled DER (B $-$ A, points). $^{*}$: $p<0.05$; $^{**}$: $p<0.001$; bold: significant after Holm--Bonferroni correction. Many, few: MSDWild; Meet.: meeting sets; AVA: AVA-AVD.}\\label{tab:stats}",
              "\\small\\setlength{\\tabcolsep}{3pt}",
              "\\begin{tabular}{lccccc}\n\\toprule",
              "B vs.\\ A & Pooled & many & few & Meet. & AVA\\\\\n\\midrule"]
@@ -287,9 +278,7 @@ def capacity_table():
         if r["name"] == "N3D" and r["profile"] == "1.04" and r["batch"] == 16:
             speed[r.get("spkcache", 264)] = r["rtfx"]
     lines = ["\\begin{table}[!tbph]\n\\centering",
-             "\\caption{Size of the speaker cache at inference. DER (\\%) and throughput (RTFx, batch 16, RTX 5090) of the released model at 1.04~s latency, "
-             "with the cache size changed at inference without retraining. The adaptive budget uses $(\\varphi,M_{\\min},M_{\\max})=(50,264,396)$.}"
-             "\\label{tab:capacity}",
+             "\\caption{Size of the speaker cache at inference. DER (\\%) and throughput (RTFx) of the released model when the cache size is changed without retraining.}\\label{tab:capacity}",
              "\\small\\setlength{\\tabcolsep}{4pt}", HEADER.replace("Pooled\\\\", "Pooled & RTFx\\\\").replace("{l" + "c" * 8 + "}", "{l" + "c" * 9 + "}").replace(" & \\\\\n\\cmidrule", " & & \\\\\n\\cmidrule")]
     for c in sizes:
         m = "base" if c == 264 else f"base_sc{c}"
